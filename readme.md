@@ -1,8 +1,3 @@
 Setup
 ========
-Ansible playbooks that deploy app and configure:
-    -Go
-    -Nginx
-    -Supervisor
-    -Npm
-    -Git
+Ansible playbook that configures Go, Nginx, Supervisor, Git and npm
