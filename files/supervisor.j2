@@ -1,0 +1,11 @@
+[program:{{app_name}}]
+directory=/usr/local/projects/src/{{app_name}}/
+command=/usr/local/go/bin/go run /usr/local/projects/src/{{app_name}}/main.go -dbpass={{dbpassword}}
+user={{deploy_user_name}}
+autostart=true
+autorestart=true
+redirect_stderr=true
+environment=GOPATH=/usr/local/projects
+stdout_logfile=/var/log/supervisor/menu.log
+stdout_logfile_maxbytes=50MB
+stdout_logfile_backups=10

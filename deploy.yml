@@ -1,0 +1,39 @@
+---
+#ansible-playbook -s deploy.yml
+- hosts: web
+  remote_user: deploy
+  vars:
+    app_name: menu
+    repo_name: https://github.com/aplucche/menu.git
+    deploy_user_name: deploy
+
+  tasks:
+    - name: Clone project repo
+      git:  repo={{repo_name}}
+            dest=/usr/local/projects/src/{{app_name}}
+            force=yes
+      register: repo
+
+    - name: Install npm packages from package.json
+      npm: path=/usr/local/projects/src/{{app_name}}
+      when: repo.changed
+
+    - name: Run npm build script
+      command: npm run build
+      args:
+        chdir: /usr/local/projects/src/{{app_name}}
+      when: repo.changed
+
+    - name: Reload Supervisor config files
+      command: sudo supervisorctl reread
+      become: yes
+      become_method: sudo
+      become_user: '{{deploy_user_name}}'
+      when: repo.changed
+
+    - name: Update Supervisor
+      command: sudo supervisorctl update
+      become: yes
+      become_method: sudo
+      become_user: '{{deploy_user_name}}'
+      when: repo.changed
