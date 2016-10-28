@@ -5,7 +5,6 @@
     - vault.yml #vault file contains deploy_user_password and dbpassword
   vars:
     app_name: menu
-    logwatch_email: aplucche@gmail.com
     repo_name: https://github.com/aplucche/menu.git
     deploy_user_name: deploy
     #deploy_user_password: stored in vault.yml
@@ -14,7 +13,6 @@
     required_packages:
       - ufw
       - fail2ban
-      - logwatch
       - vim
       - postgresql
       - libpq-dev
@@ -41,10 +39,6 @@
       - /usr/local/projects/bin
       - /usr/local/projects/src
       - /usr/local/projects/pkg
-
-    global_npm_packages:
-      - browserify
-      - uglify-js
 
   tasks:
     #Initial setup
@@ -93,22 +87,6 @@
 
     - name: Setup ufw
       ufw: state=enabled policy=deny
-
-    #Set up logwatch
-    - name: Set up Postfix to relay mail
-      debconf: name=postfix
-               question='{{ item.question }}'
-               value='{{ item.value }}'
-               vtype='{{ item.vtype }}'
-      with_items:
-        - { question: 'postfix/mailname', value: '{{ ansible_fqdn }}', vtype: 'string' }
-        - { question: 'postfix/main_mailer_type', value: 'Internet Site', vtype: 'string' }
-
-    - name: Email log summary daily
-      lineinfile: dest=/etc/cron.daily/00logwatch
-                  regexp="^/usr/sbin/logwatch"
-                  line="/usr/sbin/logwatch --output mail --mailto {{ logwatch_email }} --detail high"
-                  state=present create=yes
 
     #Install Go
     - name: Download the Go tarball
@@ -160,11 +138,6 @@
     - name: ensure postgres user cannot create databases
       become_user: postgres
       postgresql_user: name={{dbuser}} role_attr_flags=NOCREATEDB
-
-    #install npm packages
-    - name: Install global npm packages
-      npm: name={{item}} global=yes
-      with_items: '{{global_npm_packages}}'
 
     - name: Install npm packages from package.json
       npm: path=/usr/local/projects/src/{{app_name}}
